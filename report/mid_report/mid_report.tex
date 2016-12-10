@@ -1,0 +1,136 @@
+\documentclass[10pt,a4paper]{article} 
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc} 
+\usepackage[french]{babel} 
+\usepackage{supertabular} %Nécessaire pour les longs tableaux
+\usepackage[top=2.2cm, bottom=2.5cm, right=2.5cm, left=2.5cm]{geometry} %Mise en page 
+\usepackage{amsmath} %Nécessaire pour les maths 
+\usepackage{amssymb} %Nécessaire pour les maths 
+%\usepackage{stmaryrd} %Utilisation des double crochets 
+%\usepackage{pifont} %Utilisation des chiffres entourés 
+\usepackage{graphicx} %Introduction d images 
+\usepackage{epstopdf} %Utilisation des images .eps 
+\usepackage{amsthm} %Nécessaire pour créer des théorèmes 
+%\usepackage{algorithmic} %Nécessaire pour écrire des algorithmes 
+%\usepackage{algorithm} %Idem 
+\usepackage{bbold} %Nécessaire pour pouvoir écrire des indicatrices 
+\usepackage{hyperref} %Nécessaire pour écrire des liens externes 
+\usepackage{array} %Nécessaire pour faire des tableaux 
+\usepackage{tabularx} %Nécessaire pour faire de longs tableaux 
+\usepackage{caption} %Nécesaire pour mettre des titres aux tableaux (tabular) 
+\usepackage{color} %nécessaire pour écrire en couleur 
+\usepackage{float} % Pour l'option [H] de \begin{figure}
+\newtheorem{thm}{Théorème} 
+\newtheorem{mydef}{Définition}
+\newtheorem{prop}{Proposition} 
+\newtheorem{lemma}{Lemme}
+
+\newcommand{\hmm}{\textsc{HMM}}
+\newcommand{\mcmc}{\textsc{MCMC}}
+\newcommand{\fhmm}{\textsc{Factorial HMM}}
+
+\title{MVA, Projet PGM: Rapport initial\\
+  Factorial HMM}
+\author{Théis \textsc{Bazin} \and Valentin \textsc{De Bortoli} \and Élie \textsc{Michel}}
+
+\begin{document}
+
+\maketitle
+
+Le but de ce rapport est de présenter l'avancement de nos travaux à la date du
+9 décembre 2016.
+Nous avons divisé notre présentation en trois parties : compréhension
+mathématique du modèle, implémentation et choix des données.
+
+\section{Modèle mathématique: Factorial HMM}
+
+La plus grande partie de notre temps a été dédiée à la compréhension des
+mathématiques sous-jacentes au modèle.
+Nous commençons par une courte justification. Nous aurions pu modéliser des
+données observables dépendant de $M$ variables cachées pouvant prendre $K$
+valeurs comme un modèle probabiliste graphique de type \hmm,
+\emph{Hidden Markov Model}, avec une variable cachée pouvant prendre
+$K^M$ valeurs.
+
+Néanmoins cela est très coûteux et ne prend pas en compte le découplage supposé
+de nos $M$ variables cachées.
+Pour cela les auteurs de l'article proposent une variante de \hmm :
+\emph{Factorial HMM}.
+Nous présentons en \autoref{fig:hmm} et \autoref{fig:factorial_hmm} les graphes
+dirigés dans lesquels se factorisent les deux modèles.
+
+\begin{figure}[hpbt]
+  \centering
+    \includegraphics[scale=0.6]{hmm.png}
+  \caption{Hidden Markov Model\label{fig:hmm}}
+\end{figure}
+
+\begin{figure}[hpbt]
+  \centering
+    \includegraphics[scale=0.7]{facthmm.png}
+  \caption{Factorial Hidden Markov Model\label{fig:factorial_hmm}}
+\end{figure}
+
+Il s'agit alors, comme dans le modèle \hmm{}, de faire de l'inférence sur
+les paramètres de notre modèle.
+Pour cela, nous utilisons l'algorithme EM.
+L'étape de maximisation, \emph{M-step}, est bien comprise et très
+similaire à celle de \hmm{}.
+L'étape de calcul d'espérance, \emph{E-step}, est quant à elle différente
+puisque nous ne pouvons a priori pas utiliser l'algorithme \emph{sum-product},
+car il n'y a pas ici de structure d'arbre.
+
+On note cependant que l'on a tout de même une structure particulière ($M$
+couches de chaînes de Markov), ce qui permet d'établir un algorithme de calcul
+exact des probabilités.
+Malheureusement, ce calcul exact est très coûteux.
+Nous considérons donc des approximations de l'espérance, basées sur trois
+méthodes :
+
+\begin{enumerate}
+  \item L'échantillonnage de Gibbs,
+  \item \emph{Mean-Field},
+  \item \emph{Structured Mean-Field}.
+\end{enumerate}
+
+Les particularités mathématiques de chacun des modèles ont été étudiées.
+L'échantillonnage de Gibbs est une implémentation classique d'un algorithme de
+type \emph{Markov Chain Monte Carlo} (\mcmc).
+\emph{Mean-Field} rend tous les états des variables cachées indépendants et
+actualise les paramètres en conséquence.
+Dans \emph{Structured Mean-Field}, on conserve la structure de chaîne de
+Markov pour chaque couche, tout en retirant la dépendance entre chaque couche.
+
+Un problème mathématique se pose : les paramètres du modèle sont actualisés
+comme étant des points fixes d'une certaine fonction compliquée à calculer.
+Les auteurs ne proposent pas de solution pour trouver ces points fixes, y
+a-t-il une méthode exacte ou devons-nous utiliser des algorithmes itératifs ?
+
+\section{Implémentation}
+
+Concernant l'implémentation nous allons nous concentrer sur l'inférence de
+paramètres du modèle.
+Les algorithmes seront écrits en Python. L'implémentation n'a pas encore été
+travaillée ; il nous a semblé plus judicieux de s'intéresser au devoir maison
+qui traite du cas où $M=1$ : \hmm. La structure de notre code
+s'organisera comme indiqué en \autoref{fig:implem_structure}.
+
+\begin{figure}[hpbt]
+  \centering
+    \includegraphics[scale=1]{algograph.png}
+  \caption{Organisation de l'implémentation\label{fig:implem_structure}}
+\end{figure}
+
+\section{Choix des données}
+
+Tout d'abord, notre algorithme d'inférence de paramètres sera testé sur des
+données simulées, puisqu'il est facile de faire un modèle génératif de
+\fhmm.
+Nous tenterons également de reproduire les résultats obtenus par les auteurs sur
+les chorales de Bach.
+Un autre but est également de tester notre algorithme sur des données réelles
+issues de la sociologie (enquête 2013, "Génération 2010" sur l'évolution en
+début de carrière de jeunes ayant quitté le système scolaire).
+Les axes d'étude pour ce dernier jeu de données n'ont pas encore été établis.
+
+\end{document}
