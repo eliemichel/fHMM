@@ -50,14 +50,26 @@ Le but de ce rapport est de présenter le modèle \emph{Factorial HMM}, extensio
 Ces deux remarques justifient l'intérêt et la complexité de \fhmm.
 \subsection{Graphe associé et inférence} 
 Compte tenu de la proximité entre le modèle \fhmm et \hmm il est naturel de se poser la question de l'inférence et de la possibilité de construire un algorithme pour apprendre les paramètres du modèle. Dans ce but, on présente le graphe de \fhmm. Ce graphe permet de nouveau de mettre en évidence la complexité du nouveau modèle.
-GRAPH\\
+\begin{figure}[H]
+\centering
+\begin{minipage}{.46\linewidth}
+\centering
+\includegraphics[scale=0.2]{graph1.png}
+\caption{Modèle \hmm}
+\end{minipage}
+\begin{minipage}{.46\linewidth}
+\centering
+\includegraphics[scale=0.2]{graph2.png}
+\caption{Modèle \fhmm}
+\end{minipage}
+\end{figure}
 Dans le cas de \fhmm on perd la structure d'arbre. Néanmoins, on peut développer un algorithme semblable à celui développé dans \hmm qui permet de calculer exactement les marginales des probabilités se factorisant sur le graphe. Il est alors possible de résoudre exactement \Estep dans un algorithme \emph{Expectation-Maximization}, \EM. Néanmoins, cet algorithme exact n'est pas satisfaisant pour un nombre de chaînes important. On se tourne alors vers trois méthodes d'approximation :
 \begin{itemize}
 \item l'échantillonnage de Gibbs
 \item \textit{mean-fields}
 \item \textit{structured mean-fields}
 \end{itemize}
-Toutes ces méthodes ont été implémentées et testées sur des données génératives (+DONNEES ZIK).
+Toutes ces méthodes ont été implémentées et testées sur des données génératives.
 \subsection{Notations}
 On fixe ici les notations qui seront utilisées dans toute la suite de notre rapport.
 \newline
@@ -140,8 +152,7 @@ On remarque que les mises à jour données par \Mstep dépendent de \Estep uniqu
 On rappelle que les multiplications considérées ici le sont élément par élément. Il s'agit donc de calculer ces trois quantités afin de pouvoir les réinjecter dans \Mstep. Pour cela, on considère une méthode d'inférence exacte deux méthodes d'inférences variationnelles et une méthode d'échantillonnage.
 \section{E step}
 \subsection{Inférence exacte}
-Pour présenter cet algorithme il est bon d'avoir à l'esprit les calculs effectués lors de la récurrence alpha-beta de \hmm. Le schéma suivant récapitule la situation dans le cas de \hmm.
-GRAPH 
+Pour présenter cet algorithme il est bon d'avoir à l'esprit les calculs effectués lors de la récurrence alpha-beta de \hmm. Les calculs sont très semblables.
 Le problème est ici plus complexe puisque l'on n'a plus une chaîne de Markov mais $M$. On pose :
 \begin{equation}
 \left\lbrace
@@ -173,7 +184,20 @@ Quatre autres équations permettent de compléter la récurrence :
 \end{aligned}
 \right.
 \end{equation}
-On obtient le schéma suivant : GRAPH\\
+On obtient le schéma suivant :
+\begin{figure}[H]
+\centering
+\begin{minipage}{.46\linewidth}
+\centering
+\includegraphics[scale=0.2]{graph3.png}
+\caption{Récurrence sur $\alpha$}
+\end{minipage}
+\begin{minipage}{.46\linewidth}
+\centering
+\includegraphics[scale=0.2]{graph4.png}
+\caption{Récurrence sur $\beta$}
+\end{minipage}
+\end{figure}
 On peut alors calculer $\gamma_t$ de la manière suivante :
 \begin{equation}
 \gamma_t=p(S_t \vert Y_{(t)}, \theta)= \frac{\alpha_t \beta_t}{\underset{S_t}{\sum} \alpha_t \beta_t}
@@ -184,16 +208,16 @@ Il convient alors de calculer les trois quantités issues de \Mstep :
 \item $\mathbb{E}_{q_n}(S_t^{m_1}S_t^{m_2})= \underset{S_t^n, \ n \neq m_1, \ n \neq m_2}{\sum} \gamma_t$
 \item $\mathbb{E}_{q_n}(S_{t-1}^mS_t^m)= \frac{\underset{S_{t-1}^n,S_t^r, \ n \neq m, \ r \neq m}{\sum}\alpha_{t-1} p(S_t \vert S_{t-1}) p(Y_t \vert S_t) \beta_t}{\underset{S_{t-1}, S_t}{\sum}\alpha_{t-1}p(S_t \vert S_{t-1})p(Y_t \vert S_t) \beta_t} $
 \end{itemize}
-Il est important de préciser que les formules données sont exactes seulement lorsqu'elles sont appliquées en un point. En effet, $\alpha_t, \beta_t, \gamma_t$ sont des éléments de $\mathbb{R}^{\llbracket 1,K \rrbracket^M}$. Pour plus de détails sur le sens de ces formules on renvoie à l'implémentation en Python de cet algorithme LIEN GITHUB.
+Il est important de préciser que les formules données sont exactes seulement lorsqu'elles sont appliquées en un point. En effet, $\alpha_t, \beta_t, \gamma_t$ sont des éléments de $\mathbb{R}^{\llbracket 1,K \rrbracket^M}$. Pour plus de détails sur le sens de ces formules on renvoie à l'implémentation en Python de cet algorithme \href{url}{https://github.com/eliemichel/fHMM}.
 \subsection{Échantillonnage de Gibbs}
-L'inférence exacte peut être très assez couteuse en terme d'opérations COMPLEXITE ?. L'algorithme d'échantillonnage de Gibbs fournit lui un moyen d'échantillonner approximativement selon $p(S_{(t)}^{(m)} \vert Y_{(t)}, \theta)$ mais de manière rapide. En effet, l'échantillonnage de Gibbs peut être vu comme un cas particulier de \emph{Monte Carlo Markov Chain}, pour laquelle la convergence en probabilité est assurée. Néanmoins, on ne possède pas d'information sur la vitesse de convergence de ces algorithmes vers la probabilité voulue. Le choix des auteurs de \cite{ghahramani1997factorial} a été de ne pas prendre en compte le temps de mise en route de l'échantillonneur de Gibbs et de directement sélectionner les premiers échantillons produits par l'algorithme. Ce choix sera discuté par la suite. On précise le déroulement de l'échantillonnage :
+L'inférence exacte peut être très assez couteuse en terme d'opérations ($\mathcal{O}(TMK^{M+1})$). L'algorithme d'échantillonnage de Gibbs fournit lui un moyen d'échantillonner approximativement selon $p(S_{(t)}^{(m)} \vert Y_{(t)}, \theta)$ mais de manière rapide. En effet, l'échantillonnage de Gibbs peut être vu comme un cas particulier de \emph{Monte Carlo Markov Chain}, pour laquelle la convergence en probabilité est assurée. Néanmoins, on ne possède pas d'information sur la vitesse de convergence de ces algorithmes vers la probabilité voulue. Le choix des auteurs de \cite{ghahramani1997factorial} a été de ne pas prendre en compte le temps de mise en route de l'échantillonneur de Gibbs et de directement sélectionner les premiers échantillons produits par l'algorithme. Ce choix sera discuté par la suite. On précise le déroulement de l'échantillonnage :
 \begin{itemize}
 \item les différents états $S_{(t)}^{(m)}$ sont initialisés selon une loi uniforme sur $\llbracket 1,K \rrbracket$.
 \item les états $S_0^{(m)}$ sont mis à jour de manière successive (d'abord $S_0^1$ tiré selon $p(S_0^1 \vert Y_{0}, S_1^1, S_0^{(-1)}$, puis $S_0^2$ tiré selon $p(S_0^2 \vert Y_{0}, S_1^2, S_0^{(-2)}$).
 \item les états $S_t^{(m)}$ sont mis à jour de manière successive pour $t \in \llbracket 1,T$
 \item on extrait l'échantillon. Les opérations sont répétées $N_s$ fois à partir de la seconde étape pour obtenir autant d'échantillons de Gibbs.
 \end{itemize}
-On détaille simplement le calcul de la probabilité pour $t \in \llbracket 1,T-1$ (les autres calculs sont similaires).
+On détaille simplement le calcul de la probabilité pour $t \in \llbracket 1,T-1 \rrbracket$ (les autres calculs sont similaires).
 \begin{equation}
 \begin{aligned}
 p(S_t^m \vert Y_t, S_{(t)}^{(m)} \backslash S_t^m)&=\frac{1}{Z_1}p(S_t^{m}, S_{(-t)}^{m}, S_{t}^{(-m)},Y_t) \\
