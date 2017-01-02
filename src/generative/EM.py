@@ -5,6 +5,7 @@ Created on Tue Dec 20 22:41:36 2016
 @author: De Bortoli
 """
 import numpy as np
+from sumprodlog import sumprodlog
 from numpy import matlib, linalg
 from exact_inference import exact_inference, exact_inference_E
 from gibbs_sampler import gibbs_sampler, gibbs_sampler_E
@@ -43,6 +44,7 @@ def EM(pi0_l, A0_l, C0_m, W0_l, Y_m, N, method=1, Ns=10):
                approximate log-likelihood at iteration n
     """
     #Defining the constants
+    M = len(pi0_l)
     K=len(pi0_l[0])
     
     #Initializing the parameters
@@ -68,9 +70,14 @@ def EM(pi0_l, A0_l, C0_m, W0_l, Y_m, N, method=1, Ns=10):
         elif method == 2:
             [S_l] = gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns)
             [E_l, EmixM_l, EmixT_l] = gibbs_sampler_E(S_l, K)
-            
+        
         #M step
         [pi_l, A_l, C_m, W_l] = Mstep(E_l, EmixM_l, EmixT_l, Y_m)
+        
+        #Correction step
+        for m in range(M):
+            pi_l[m] += 1e-308
+            A_l[m] += 1e-308
         
         L_l.append(loglikelihood(pi_l, A_l, C_m, W_l, Y_m, E_l, EmixM_l, \
                                  EmixT_l))
@@ -128,14 +135,14 @@ def Mstep(E_l, EmixM_l, EmixT_l, Y_m):
             A_m += EmixT_l[t][m,:,:]
             S_v += np.transpose(np.array([E_l[t-1][m,:]]))
         S_m = np.matlib.repmat(S_v, 1, K)
-        A_l.append(A_m / S_m)
+        A_l.append((A_m+1e-308) / (S_m+1e-308))
         
     #Creating appropriate arrays
     num_m=np.zeros((D,K*M))
     denom_m=np.zeros((K*M,K*M))
     for t in range(T+1):
         Y_v = np.transpose(np.array([Y_m[:,t]]))
-        El_v = np.reshape(E_l[m], (1,K*M))
+        El_v = np.reshape(E_l[t], (1,K*M))
         num_m += np.dot(Y_v, El_v)
         
         for i in range(K*M):
@@ -144,7 +151,8 @@ def Mstep(E_l, EmixM_l, EmixT_l, Y_m):
             for j in range(K*M):
                 m_2 = j // K
                 k_2 = j - m_2*K
-                denom_m[i,j] += EmixM_l[t][m_1][m_2][k_1][k_2]           
+                denom_m[i,j] += EmixM_l[t][m_1][m_2][k_1][k_2]
+    
     denom_m = np.linalg.pinv(denom_m)
     
     #Computing W and filling W_l
@@ -161,9 +169,10 @@ def Mstep(E_l, EmixM_l, EmixT_l, Y_m):
         Y_v = np.transpose(np.array([Y_m[:,t]]))
         C_m += np.dot(Y_v, np.transpose(Y_v))
         
-        for m in range(M):
-            C_m += (-np.dot(np.dot(W_l[m], np.transpose(np.array([E_l[t][m,:]])))
-                                ,np.transpose(Y_v)))
+        Y_v = np.transpose(np.array([Y_m[:,t]]))
+        El_v = np.reshape(E_l[t], (1,K*M))
+        C_m += -np.dot(W, np.transpose(np.dot(Y_v, El_v)))
+        
     C_m = C_m/(T+1)
     
     return [pi_l, A_l, C_m, W_l]

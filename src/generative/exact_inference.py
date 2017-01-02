@@ -8,7 +8,6 @@ import numpy as np
 import itertools
 from numpy import *
 from logprob import logprobobs,logprobchain
-from sumprodlog import sumprodlog
 from extract_mat import extract_mat
 
 def exact_inference(logpi_l, logA_l, C_m, W_l, Y_m):
@@ -79,8 +78,8 @@ def exact_inference(logpi_l, logA_l, C_m, W_l, Y_m):
         
         #M backward recursion step
         for m in range(M-1,-1,-1):
-            alphatmold_m = alphatm_m
-            betatmold_m = betatm_m
+            alphatmold_m = np.copy(alphatm_m)
+            betatmold_m = np.copy(betatm_m)
             
             for ind in itertools.product(*([range(K)]*M)):
                 [extractalphatmold_v] = extract_mat(ind, alphatmold_m, m)
@@ -103,7 +102,7 @@ def exact_inference(logpi_l, logA_l, C_m, W_l, Y_m):
     
     for t in range(T+1):
         gamma_l.append(alpha_l[t] + beta_l[t] - \
-                        sumprodlog(alpha_l[t]+beta_l[t]))
+                        sumprodlog(alpha_l[t][:]+beta_l[t][:]))
         
     
     return [alpha_l,beta_l,gamma_l]
@@ -164,11 +163,11 @@ def exact_inference_E(alpha_l,beta_l,gamma_l,logA_l,C_m,W_l,Y_m):
         EmixT_l.append(np.ndarray((M,K,K))*0)
     
     #Initializing the intermediate lists
-    Eint_l = ([[[[-1e308] for k in range(K)] for m in range(M)] 
+    Eint_l = ([[[[] for k in range(K)] for m in range(M)] 
              for t in range(T+1)])
-    EmixMint_l = ([[[[[[-1e308] for k1 in range(K)] for k2 in range(K)] 
+    EmixMint_l = ([[[[[[] for k1 in range(K)] for k2 in range(K)] 
                  for m1 in range(M)] for m2 in range(M)] for t in range (T+1)])
-    EmixTint_l = ([[[[[-1e308] for k1 in range(K)] for k2 in range(K)] 
+    EmixTint_l = ([[[[[] for k1 in range(K)] for k2 in range(K)] 
                  for m in range(M)] for t in range(T+1)])
     Z_l = [[] for t in range(T+1)]
     #Remark: -1e308 is used to produce a zero when applying the exponential

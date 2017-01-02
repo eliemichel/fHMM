@@ -21,6 +21,10 @@ def sumprodlog(vec):
         Direct implementation without using this function leads to numerical
         errors.
     """
-    M=np.max(vec)
-    sumvec=M+np.log(sum(np.exp(vec-M)))
+    if vec.size == 0:
+        sumvec = -1e308
+    else:
+        M=np.max(vec)
+        sumvec=M+np.log(sum(np.exp(vec-M)))
+            
     return sumvec

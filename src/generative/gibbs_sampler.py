@@ -8,7 +8,6 @@ Created on Mon Dec 19 16:21:15 2016
 import numpy as np
 from numpy import *
 from logprob import logprobobs,logprobchain
-from sumprodlog import sumprodlog
 
 def gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns):
     """
@@ -39,7 +38,6 @@ def gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns):
     T = len(Y_m[0,:])
     T = T - 1
     
-    
     #Initializing the list
     S_l = []
     for n in range(Ns+1):
@@ -56,7 +54,7 @@ def gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns):
         S0int_v = np.copy(S_l[n-1][:,0])
         
         for m in range(M):
-            logp_v = logpi_l[m] + logA_l[m][:,S_l[n-1][m,1]]
+            logp_v = logpi_l[m] + logA_l[m][:, S_l[n-1][m,1]]
             logprobobs_v = np.zeros((K,))
             
             for k in range(K):
@@ -79,13 +77,15 @@ def gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns):
             Stint_v = np.copy(S_l[n-1][:,t])
             
             for m in range(M):
-                logp_v = (logpi_l[m] + logA_l[m][:,S_l[n-1][m,t+1]] + 
-                        logA_l[m][S_l[n][m,t-1],:])
+                logp_v = (logA_l[m][:,S_l[n-1][m,t+1]] + 
+                logA_l[m][S_l[n][m,t-1],:])
                 logprobobs_v = np.zeros((K,))
+                
                 for k in range(K):
                     ind = (Stint_v[0:m].tolist() + [k] + 
                            Stint_v[(m+1):M].tolist())
                     logprobobs_v[k] = logprobobs(t, tuple(ind), C_m, W_l, Y_m)
+                    
                 logp_v += logprobobs_v
                 logp_v += -sumprodlog(logp_v)
                 cump_v = np.cumsum(exp(logp_v))
@@ -101,7 +101,7 @@ def gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns):
         STint_v = np.copy(S_l[n-1][:,T])
         
         for m in range(M):
-            logp_v = logpi_l[m] + logA_l[m][S_l[n-1][m,T-1],:]
+            logp_v = logA_l[m][S_l[n][m,T-1],:]
             logprobobs_v = np.zeros((K,))
             
             for k in range(K):
@@ -166,25 +166,25 @@ def gibbs_sampler_E(S_l,K):
         EmixT_l.insert(t,np.ndarray((M,K,K))*0)
     
     #Fillling E_l
-    for n in range(Ns+1):
+    for n in range(1,Ns+1):
         for t in range(T+1):
             for m in range(M):
                 E_l[t][m,S_l[n][m,t]] += 1
-    E_l[:] = [M/(Ns+1) for M in E_l]
+    E_l[:] = [M/Ns for M in E_l]
     
     #Filling EmixM_l
-    for n in range(Ns+1):
+    for n in range(1,Ns+1):
         for t in range(T+1):
             for m1 in range(M):
                 for m2 in range(M):
                     EmixM_l[t][m1,m2,S_l[n][m1,t],S_l[n][m2,t]] += 1
-    EmixM_l[:] = [M/(Ns+1) for M in EmixM_l]
+    EmixM_l[:] = [M/Ns for M in EmixM_l]
     
     #Filling EmixT_l
-    for n in range(Ns+1):
+    for n in range(1,Ns+1):
         for t in range(1,T+1):
             for m in range(M):
                 EmixT_l[t][m,S_l[n][m,t-1],S_l[n][m,t]] += 1
-    EmixT_l[:] = [M/(Ns+1) for M in EmixT_l]
+    EmixT_l[:] = [M/Ns for M in EmixT_l]
     
     return [E_l,EmixM_l,EmixT_l]

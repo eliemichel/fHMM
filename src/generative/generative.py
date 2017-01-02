@@ -51,8 +51,8 @@ def generative(pi_l, A_l, C_m, W_l, T):
         Soldt_v = np.copy(S_m[:,t-1])
         for m in np.arange(M):
             Am_m = A_l[m]
-            Soldtm = Soldt_v[m]
-            prob_v = Am_m[Soldtm,:]
+            Soldtm_v = Soldt_v[m]
+            prob_v = Am_m[np.int(Soldtm_v),:]
             
             r = random.random()
             cumprob_v = np.cumsum(prob_v)
@@ -64,9 +64,49 @@ def generative(pi_l, A_l, C_m, W_l, T):
     for t in range(T+1):
         mut_v = 0
         for m in np.arange(M):
-            mut_v += W_l[m][:,S_m[m,t]]
+            mut_v += W_l[m][:,np.int(S_m[m,t])]
             
         Yt_v = np.random.multivariate_normal(mut_v, C_m)
         Y_m[:,t] = Yt_v
         
     return [S_m,Y_m]
+    
+def randinit(M, K, D):
+    """
+    Give a random initialization to the EM algorithm.
+    
+    Input arguments:
+        M -- an integer representing the number of Markov chains.
+        K -- an integer representing the number of states
+        D -- an integer representing the dimension of the output arguments.
+        
+    Output arguments:
+        pi_l -- a list of length M where each element corresponds to the 
+                initial distribution of the m-th Markov chain.
+        A_l -- a list of length M where each element corresponds to the 
+               transition matrix of the m-th Markov chain.
+        W_l -- a list of length M where each element corresponds to the mean
+               contribution of the M-th Markov chain.
+    """
+    
+    #Filling pi_l
+    pi_l = []
+    for m in range(M):
+        piint_v = np.reshape(random.rand(1,K), (K,))
+        pi_l.append(piint_v / sum(piint_v))
+    
+    #Filling A_l
+    A_l = []
+    for m in range(M):
+        Aint_m = random.rand(K,K)
+        for k in range(K):
+            s = sum(Aint_m[k,:])
+            Aint_m[k,:] = Aint_m[k,:] / s
+        A_l.append(Aint_m)
+    
+    #Filling W_l
+    W_l = []
+    for m in range(M):
+        W_l.append(random.rand(D, K))
+    
+    return [pi_l, A_l, W_l]

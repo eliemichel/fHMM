@@ -65,7 +65,7 @@ def loglikelihood(pi_l, A_l, C_m, W_l, Y_m, E_l, EmixM_l, EmixT_l):
                  np.dot(W_l[m], np.transpose(np.array([E_l[t][m,:]])))))[0,0]
             for n in range(M):
                 L += -1/2*np.trace(np.dot(np.transpose(W_l[m]), \
-                     np.dot(np.linalg.inv(C_m), np.dot(W_l[m], \
-                     EmixM_l[t][m,n,:,:]))))
+                     np.dot(np.linalg.inv(C_m), np.dot(W_l[n], \
+                     EmixM_l[t][n,m,:,:]))))
     
     return [L]
