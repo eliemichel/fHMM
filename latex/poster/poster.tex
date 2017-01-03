@@ -27,6 +27,8 @@
 \usepackage{booktabs} % Horizontal rules in tables
 \usepackage{relsize} % Used for making text smaller in some places
 \usepackage{textcomp}
+\usepackage{amsmath}  %Nécessaire pour les maths 
+\usepackage{amssymb}  %Nécessaire pour les maths 
 
 \graphicspath{{../resources/pictures}} % Directory in which figures are stored
 
@@ -39,6 +41,15 @@
 \definecolor{headerfontcol}{RGB}{0,0,0}
 % Background color for the content in the content boxes
 \definecolor{boxcolor}{RGB}{255, 255, 255}
+
+\newcommand{\hmm}{\textsc{HMM}}
+\newcommand{\mcmc}{\textsc{MCMC}}
+\newcommand{\fhmm}{\textsc{Factorial HMM}}
+\newcommand{\Estep}{\textsc{E-step}}
+\newcommand{\Mstep}{\textsc{M-step}}
+\newcommand{\EM}{\textsc{EM}}
+\newcommand{\meanfield}{\textsc{mean-field}}
+\newcommand{\structmeanfield}{\textsc{structured mean-field}}
 
 \begin{document}
 
@@ -87,178 +98,137 @@ boxshade=plain
 
 \headerbox{Introduction}{name=introduction,column=0,row=0}{
 
-Donec feugiat sagittis \textbf{neque}, nec ultrices risus vestibulum at. 
-Suspendisse enim purus, tempus sed malesuada et, aliquam non nulla. Cras vel 
-tortor justo. Vestibulum viverra purus id risus lacinia quis malesuada lorem 
-mattis. \textbf{Nullam ornare egestas} metus vel posuere. In hac habitasse 
-platea dictumst. In malesuada aliquet nulla, quis iaculis mauris accumsan ac.
-
-Maecenas placerat hendrerit mollis. Nunc fringilla sollicitudin pulvinar. 
-Vestibulum a odio arcu. \textit{Ut tristique enim ut odio pulvinar non dignissim 
-risus dignissim.} Nullam nibh augue.
+In this poster we present the factorial hidden Markov model, \fhmm{}, an extension of the well-known \hmm{}. Using \hmm{} we assume that the hidden variable is a single multinomial variable. However, this assumption can lead to computational problems. The authors of \cite{ghahramani1997factorial} describe the case where we want to describe $M=30$ binary states. Using \hmm{} the size of the state space is $2^{30}$. Using \textit{distributed} state representations we use only $M=30$ binary states. This property is encoded in the following graph representation.\\
+FIGURE\\
+We are now focusing on how to do inference in this graphical model.
 }
 
 %----------------------------------------------------------------------------------------
-%	MATERIALS AND METHODS
+%	AN EM ALGORTIHM...
 %----------------------------------------------------------------------------------------
 
-\headerbox{Materials and Methods}{name=methods,column=0,below=introduction}{
-
+\headerbox{An EM algorithm...}{name=methods,column=0,below=introduction}{
+We present the following \EM{} algorithm \cite{wu1983convergence}
 \begin{description}
-\item[ER1] Sed a orci non ipsum posuere placerat. Nunc in mi augue, a adipiscing 
-massa. Donec dapibus gravida odio, condimentum convallis urna.
-\item[ER2] Nullam sagittis cursus neque, sit amet mollis elit auctor in.
-Etiam sed lectus a nulla rhoncus interdum a tempus nunc. Sed at eleifend purus.
+\item[\Estep{}] Computing the posterior $p(S_{(t)}^{(m)} \vert Y_{(t)}, \theta)$
+\item[\Mstep{}] Updating the parameters $\theta$
 \end{description}
+\Mstep{} is easy but \Estep{} can be really hard to compute. Recall that in the \hmm{} we used an alpha-beta recursion to deal with the \Estep{}. We present three different ways to deal with \Estep{}:
+\begin{itemize}
+\item exact inference
+\item Gibbs sampling
+\item variational methods
+\end{itemize}
+}
 
-Nullam sollicitudin lobortis urna quis varius. Nullam sagittis blandit diam, $DN 
-= G_t(V_t,E_t)$, risus $E_t \subseteq V_t \times V_t$ ($\forall t \geq 0$). vel 
-tortor justo, $G_0$, quis malesuada lorem.
+%----------------------------------------------------------------------------------------
+%	Exact inference
+%----------------------------------------------------------------------------------------
 
+\headerbox{Exact inference}{name=conclusion,column=0,below=methods}{
+
+The exact inference allows us to compute the posterior distribution setting:
 \begin{equation}
-\cos^3 \theta =\frac{1}{4}\cos\theta+\frac{3}{4}\cos 3\theta
-\label{eq:refname}
+\left\lbrace
+\begin{aligned}
+&\alpha_t = p(S_t^1, \dots, S_t^M, Y_{(1,t)} \vert \theta)\\
+&\alpha_t^m = p(S_{t-1}^1,\dots,S_{t-1}^m,S_t^{m+1},\dots,S_t^M \vert \theta)\\
+&\beta_t = p(Y_{t+1,T} \vert S_t^1, \dots, S_t^M, \theta) \\
+&\beta_{t-1}^m = p(Y_{t+1,T} \vert S_t^1,\dots,S_t^m,S_{t-1}^{m+1},\dots,S_{t-1}^M, \theta)
+\end{aligned}
+\right.
 \end{equation}
+Thus we have:
+\begin{equation}
+\gamma_t = P(S_t \vert Y_{(t)}, \theta) \propto \alpha_t \beta_t
+\end{equation}
+$\alpha_t$ and $\beta_t$ can be computed recursively:\\
+GRAPH
+}
 
-Vivamus porta lacus et lectus \textbf{porta lacus}. Pellentesque habitant morbi 
-tristique senectus et netus et malesuada fames ac turpis. torte $G_t$ hac millis 
-\textbf{plates} Idk 
+\headerbox{Gibbs sampling}{name=results1,span=1,column=1,row=0}{
+% To reduce this block to 1 column width, remove 'span=2'
+
+To go through we do not need to compute the posterior but only $\langle S_t^m \rangle$, $\langle S_t^m S_t^n \rangle$ and $\langle S_{t-1}^m S_t \rangle$. Using the law of large numbers and \mcmc{} methods we can avoid doing exact inference. We use Gibbs sampling here. Since we have a graph structure the iteration gives:
+\begin{equation}
+\begin{aligned}
+&P(S_{t}^m \vert S_{(-t)}^{(m)}, Y_{(t)},\theta) \propto \\ &P(S_t^m \vert S_{t-1}^m)P(S_{t+1}^m \vert S_t^m)P(Y_t \vert S_t^{(m)})
+\end{aligned}
+\end{equation}
+We use an "impatient" Gibbs sampler, i.e no burn-in samples and only a few.\\
+We do not try to reach convergence since this algorithm can be very slow.
 }
 
 %----------------------------------------------------------------------------------------
-%	CONCLUSION
+%	VARIATIONAL METHODS
 %----------------------------------------------------------------------------------------
 
-\headerbox{Conclusion}{name=conclusion,column=0,below=methods}{
-
-Fusce at erat vitae metus porttitor auctor sit amet at ante. In id dolor tellus, 
-non aliquet elit. Vestibulum bibendum, augue sed laoreet congue, enim nisi 
-ultricies diam, ac pharetra mi dui ut sapien. Maecenas fermentum, neque ut 
-scelerisque consequat, purus leo ultrices nulla, quis scelerisque risus elit non 
-turpis. 
-
-\begin{enumerate}
-\item Cras ac ipsum eu nisl imperdiet interdum nunc bibendum, est in pulvinar 
-facilisis, mi purus fringilla tellus, eu varius ipsum ante laoreet ipsum
-\item Sed cursus erat quis odio laoreet facilisis maecenas vehicula
-\end{enumerate}
+\headerbox{Variational methods}{name=var,column=2,row=0}{
+Using \mcmc{} we have no information regarding the speed of convergence to the posterior. 
+We know introduce a new family of methods which put constraints on the \Estep thus not 
+giving the posterior but a \textit{constrained} posterior:
+\begin{itemize}
+\item \meanfield{}: all hidden states are supposed independent
+\item \meanfield{}: we relax the constraint and suppose we have $M$ independent Markov chains.
+\end{itemize}
+The distance between the true posterior and this approximate proability is given by
+$\text{KL}(q \| p(S_{(t)}^{(m)} \vert Y_{(t)}, \theta)$ where KL is the Kullback-Leiber divergence. We iteratively minimize this quantity.
 }
+
+%----------------------------------------------------------------------------------------
+%	RESULTS
+%----------------------------------------------------------------------------------------
+
+\headerbox{Results}{name=results,column=1,span=2,below=var}{
+We implemented all the four described methods and tested our implementation computing the 
+evolution of the log-likelihood (experiments: $K=2$, $M=3)$.\\
+FIGURE\\
+Note that the log-likelihood is not always increasing for the variational models since we 
+compute an approximated log-likelihood. In \cite{ghahramani1997factorial} the author suggested
+using only 10 samples and no burn-in for the Gibbs sampling however we found that adding a little
+burn-in smoothed our log-likelihood.\\
+FIGURE\\
+We also provide the following tabular:
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\Estep{} method & Iteration duration (s) \\
+\hline \hline
+\hmm - exact inference & 0.453  \\ \hline
+\fhmm - exact inference & 0.429 \\ \hline
+Gibbs sampling &  1.100 \\ \hline
+\meanfield & 0.053 \\ \hline
+\structmeanfield & 0.319 \\ \hline
+\end{tabular}
+\end{center}
+\newline
+As $M$ increases exact inference became intractable and Gibbs sampling inefficient.
+Variational methods are still satisfactory though.
+}
+
+%----------------------------------------------------------------------------------------
+%	CONCLUSION & FUTURE WORK
+%----------------------------------------------------------------------------------------
+
+\headerbox{Conclusion and future work...}{name=conclusion,column=1,span=1,below=results}{
+In our work we implemented the four methods to compute \Estep{}, investigate the mathematical 
+model behind \fhmm{} and experimentally verified the superiority of variationnal models to 
+deal with large space state. In a future work, we wish to test our algorithm on real data and
+the properties of this model versus \hmm{} on test data.
+}
+
+%----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
 %	REFERENCES
 %----------------------------------------------------------------------------------------
 
-\headerbox{References}{name=references,column=0,below=conclusion}{
-
-\smaller % Reduce the font size in this block
-\renewcommand{\section}[2]{\vskip 0.05em} % Get rid of the default "References" section title
-\nocite{*} % Insert publications even if they are not cited in the poster
-
-\bibliographystyle{unsrt}
-\bibliography{../resources/bibliography/bibfile}
+\headerbox{References}{name=conclusion,column=2,span=1,below=results}{
+\bibliographystyle{plain}
+\bibliography{../resources/bibliography/bibfile}\
 }
 
 %----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
-
-\headerbox{Acknowledgements}{name=acknowledgements,column=0,below=references, 
-above=bottom}{
-
-\smaller % Reduce the font size in this block
-Fusce mattis tellus ac odio imperdiet lobortis. Cum sociis natoque penatibus et 
-magnis dis parturient montes, nascetur ridiculus mus. Phasellus commodo blandit 
-euismod. Ut porttitor cursus magna. Mauris adipiscing pellentesque ipsum nec 
-facilisis. Cras ornare bibendum bibendum. Ut a elit purus, vel adipiscing.
-} 
-
-%----------------------------------------------------------------------------------------
-%	RESULTS 1
-%----------------------------------------------------------------------------------------
-
-\headerbox{Results Heading}{name=results1,span=1,column=1,row=0}{
-% To reduce this block to 1 column width, remove 'span=2'
-
-Nunc sit amet sem ut nulla tincidunt mattis vel nec mauris. Vestibulum odio 
-tellus, lobortis. Vel adipiscing, Aliquam dictum, ligula egestas commodo 
-posuere, lectus lectus congue ligula, sed posuere urna lectus at nisi. Aenean 
-commodo risus ut dolor (viverra scelerisque). Nullam varius, lacus et interdum 
-hendrerit, odio orci ultrices mauris, id interdum eros mauris at urna. Fusce in 
-nisi eros, sit amet volutpat turpis, \textbf{porttior magna} (commodo blandit 
-euismod) \textbf{facilisis ornate magnis} (dis magnis). 
-
-%------------------------------------------------
-
-\begin{center}
-\begin{tabular}{l l l}
-\toprule
-\textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
-\midrule
-Treatment 1 & 0.0003262 & 0.562 \\
-Treatment 2 & 0.0015681 & 0.910 \\
-Treatment 3 & 0.0009271 & 0.296 \\
-\bottomrule
-\end{tabular}
-\captionof{table}{Table caption}
-\end{center}
-}
-
-%----------------------------------------------------------------------------------------
-%	RESULTS 2
-%----------------------------------------------------------------------------------------
-
-\headerbox{Results Heading 2}{name=results2,span=2,column=1,below=results1,
-  above=bottom}{% To reduce this block to 1 column width, remove 'span=2'
-
-Nunc sit amet sem ut nulla tincidunt mattis vel nec mauris. Vestibulum odio 
-tellus, lobortis. Vel adipiscing, Aliquam dictum, ligula egestas commodo 
-posuere, lectus lectus congue ligula, sed posuere urna lectus at nisi. Aenean 
-commodo risus ut dolor (viverra scelerisque). Nullam varius, lacus et interdum 
-hendrerit, odio orci ultrices mauris, id interdum eros mauris at urna. Fusce in 
-nisi eros, sit amet volutpat turpis, \textbf{porttior magna} (commodo blandit 
-euismod) \textbf{facilisis ornate magnis} (dis magnis). 
-
-%------------------------------------------------
-
-\begin{center}
-% \includegraphics[width=0.49\linewidth]{placeholder}
-% \includegraphics[width=0.49\linewidth]{placeholder}
-\captionof{figure}{Figure caption 1 (left); Figure caption 2 (right)}
-\end{center}
-
-%------------------------------------------------
-
-Aliquam ac justo lectus. Nunc ultrices aliquet purus non dictum. Nulla facilisi. 
-Quisque vitae urna non purus sollicitudin venenatis. Aliquam erat volutpat. Cum 
-sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus 
-mus. In hendrerit tortor sed massa consequat eu viverra justo porta. Ut nec 
-felis sem, non elementum.
-
-%------------------------------------------------
-
-\begin{center}
-% \includegraphics[width=0.8\linewidth]{placeholder}
-\captionof{figure}{Figure caption}
-\end{center}
-
-%------------------------------------------------
-
-Nunc sit amet sem ut nulla tincidunt mattis vel nec mauris. Vestibulum odio 
-tellus, lobortis. Vel adipiscing, Aliquam dictum, ligula egestas commodo 
-posuere, lectus lectus congue ligula, sed posuere urna lectus at nisi. Aenean 
-commodo risus ut dolor (viverra scelerisque). Nullam varius, lacus et interdum 
-hendrerit, odio orci ultrices mauris, id interdum eros mauris at urna. Fusce in 
-nisi eros, sit amet volutpat turpis, \textbf{porttior magna} (commodo blandit 
-euismod) \textbf{facilisis ornate magnis} (dis magnis). Aliquam ac justo lectus. 
-Nunc ultrices aliquet purus non dictum. Nulla facilisi. Quisque vitae urna non 
-purus sollicitudin venenatis. Aliquam erat volutpat. Cum sociis natoque 
-penatibus et magnis dis parturient montes, nascetur ridiculus mus. In hendrerit 
-tortor sed massa consequat eu viverra justo porta. Ut nec felis sem, non 
-elementum.
-}
-
-%----------------------------------------------------------------------------------------
-
 \end{poster}
 
 \end{document}\grid
