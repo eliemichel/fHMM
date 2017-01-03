@@ -9,8 +9,10 @@ from sumprodlog import sumprodlog
 from numpy import matlib, linalg
 from exact_inference import exact_inference, exact_inference_E
 from gibbs_sampler import gibbs_sampler, gibbs_sampler_E
+from meanfield import meanfield, meanfield_E
+from structmeanfield import structmeanfield, structmeanfield_E
 
-def EM(pi0_l, A0_l, C0_m, W0_l, Y_m, N, method=1, Ns=10):
+def EM(pi0_l, A0_l, C0_m, W0_l, Y_m, N, method=1, Ns=30, Nr=10, Nit=5):
     """
     Apply the EM algorithm to a dataset with given E step method.
     
@@ -68,8 +70,14 @@ def EM(pi0_l, A0_l, C0_m, W0_l, Y_m, N, method=1, Ns=10):
             [E_l, EmixM_l, EmixT_l] = exact_inference_E(alpha_l, beta_l, \
             gamma_l, logA_l, C_m, W_l, Y_m)
         elif method == 2:
-            [S_l] = gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Ns)
-            [E_l, EmixM_l, EmixT_l] = gibbs_sampler_E(S_l, K)
+            [S_l] = gibbs_sampler(logpi_l, logA_l, C_m, W_l, Y_m, Nr)
+            [E_l, EmixM_l, EmixT_l] = gibbs_sampler_E(S_l, K, Ns)
+        elif method == 3:
+            [theta_l] = meanfield(logpi_l, logA_l, C_m, W_l, Y_m, Nit)
+            [E_l, EmixM_l, EmixT_l] = meanfield_E(theta_l)
+        elif method == 4:
+            [h_l] = structmeanfield(logpi_l, logA_l, C_m, W_l, Y_m, Nit)
+            [E_l, EmixM_l, EmixT_l] = structmeanfield_E(logpi_l, logA_l, h_l)
         
         #M step
         [pi_l, A_l, C_m, W_l] = Mstep(E_l, EmixM_l, EmixT_l, Y_m)
