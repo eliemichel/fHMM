@@ -86,12 +86,11 @@ boxshade=plain
 %	TITLE AND AUTHOR NAME
 %----------------------------------------------------------------------------------------
 %
-{\sf\bf Factorial HMM} % Poster title
-{Th\'{e}is Bazin, Valentin De Bortoli, \'{E}lie Michel\\ % Author names
+{\sf\bf \textsc{Factorial HMM}} % Poster title
+{Th\'{e}is \textsc{Bazin}, Valentin \textsc{De Bortoli} \\ % Author names
 % Author email addresses
-{\smaller \textlangle{} theis.bazin, vdeborto, elie.michel \textrangle{} @ ens-paris-saclay.fr}}
-{\includegraphics[scale=0.2]{../resources/pictures/logos/logo-ens_paris_saclay.png}} % University/lab logo
-
+{\smaller \texttt{theis.bazin@ens-paris-saclay.fr}, \texttt{vdeborto@ens-paris-saclay.fr}}}
+{\includegraphics[scale=0.2]{../resources/pictures/logos/logo-ens_paris_saclay.png}}
 %----------------------------------------------------------------------------------------
 %	INTRODUCTION
 %----------------------------------------------------------------------------------------
@@ -113,7 +112,7 @@ perform inference on this model.
 \end{description}
 
 
-This yields the \fhmm{} model.
+This yields the \fhmm{} model:
 
 \begin{center}
 \includegraphics[width=0.8\linewidth]{../resources/pictures/facthmm.png}
@@ -156,8 +155,8 @@ The exact inference allows us to compute the posterior distribution setting:
 \begin{aligned}
 &\alpha_t = p(S_t^1, \dots, S_t^M, Y_{(1,t)} \vert \theta)\\
 &\alpha_t^m = p(S_{t-1}^1,\dots,S_{t-1}^m,S_t^{m+1},\dots,S_t^M \vert \theta)\\
-&\beta_t = p(Y_{t+1,T} \vert S_t^1, \dots, S_t^M, \theta) \\
-&\beta_{t-1}^m = p(Y_{t+1,T} \vert S_t^1,\dots,S_t^m,S_{t-1}^{m+1},\dots,S_{t-1}^M, \theta)
+&\beta_t = p(Y_{(t+1,T)} \vert S_t^1, \dots, S_t^M, \theta) \\
+&\beta_{t-1}^m = p(Y_{(t+1,T)} \vert S_t^1,\dots,S_t^m,S_{t-1}^{m+1},\dots,S_{t-1}^M, \theta)
 \end{aligned}
 \right.
 \end{equation}
@@ -165,8 +164,14 @@ Thus we have:
 \begin{equation}
 \gamma_t = P(S_t \vert Y_{(t)}, \theta) \propto \alpha_t \beta_t
 \end{equation}
-$\alpha_t$ and $\beta_t$ can be computed recursively:\\
-GRAPH
+$\alpha_t$ and $\beta_t$ can be computed recursively:
+
+\begin{center}
+\includegraphics[width=0.35\linewidth]{../resources/pictures/graph3.png}
+\includegraphics[width=0.35\linewidth]{../resources/pictures/graph4.png}
+\captionof{figure}{alpha-beta recursions}
+\end{center}
+
 }
 
 %----------------------------------------------------------------------------
@@ -189,8 +194,9 @@ Since we have a graph structure the iteration gives:
 \end{aligned}
 \end{equation}
 
-We use an "impatient" Gibbs sampler, i.e no burn-in samples and only a few.\\
-We do not try to reach convergence since this algorithm can be very slow.
+We use an \emph{impatient} Gibbs sampler, that is we only pick few samples and
+introduce no burn-in period: We do not try to reach convergence since this
+algorithm can be very slow.
 }
 
 %----------------------------------------------------------------------------
@@ -202,18 +208,18 @@ We implemented all the four described methods and tested our implementation
 computing the evolution of the log-likelihood (experiments: $K=2$, $M=3)$.
 
 \begin{center}
-\includegraphics[width=0.17\linewidth]{../resources/pictures/M3_K2_fhmm_exact.png}
-\includegraphics[width=0.17\linewidth]{../resources/pictures/M3_K2_gibbsnoburning.png}
-\includegraphics[width=0.17\linewidth]{../resources/pictures/M3_K2_gibbs.png}
-\includegraphics[width=0.17\linewidth]{../resources/pictures/M3_K2_meanfield.png}
-\includegraphics[width=0.17\linewidth]{../resources/pictures/M3_K2_structmeanfield.png}
+\includegraphics[width=0.19\linewidth]{../resources/pictures/M3_K2_fhmm_exact.png}
+\includegraphics[width=0.19\linewidth]{../resources/pictures/M3_K2_gibbsnoburning.png}
+\includegraphics[width=0.19\linewidth]{../resources/pictures/M3_K2_gibbs.png}
+\includegraphics[width=0.19\linewidth]{../resources/pictures/M3_K2_meanfield.png}
+\includegraphics[width=0.19\linewidth]{../resources/pictures/M3_K2_structmeanfield.png}
 \captionof{figure}{Log-likelihood over EM iterations for the different models
   (from left to right: exact inference, impatient Gibbs sampling, Gibss
   sampling with burn-in, mean-field, structured mean-field)}
 \end{center}
 
 Note that the log-likelihood is not always increasing for the variational
-models since we compute an approximated log-likelihood.
+models since we compute an approximate log-likelihood.
 
 In \cite{ghahramani1997factorial} the author suggested using only 10 samples
 and no burn-in for the Gibbs sampling however we found that adding a small
@@ -258,7 +264,7 @@ thus not yielding the posterior but a \textit{constrained} posterior:
 \begin{center}
 \includegraphics[width=0.6\linewidth]{../resources/pictures/gm_variational.png}
 \captionof{figure}{Graphical models for the variational inference
-(from left to right: mean-field, structure mean-field)}
+(mean-field, structured mean-field)}
 \end{center}
 
 % The distance between the true posterior and this approximate proability is
@@ -297,7 +303,7 @@ In our work:
 %----------------------------------------------------------------------------------------
 
 \headerbox{References}{name=conclusion,column=1,span=1,below=gibbs,above=bottom}{
-% \smaller % Reduce the font size in this block
+\smaller % Reduce the font size in this block
 \renewcommand{\section}[2]{\vskip 0.05em} % Get rid of the default "References" section title
 \nocite{*} % Insert publications even if they are not cited in the poster
 
