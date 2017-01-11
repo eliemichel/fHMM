@@ -7,16 +7,17 @@ Created on Sat Dec 10 14:17:37 2016
 
 import numpy as np
 
+
 def sumprodlog(vec):
     """
     Compute the logarithm of a sum of the exponential of a vector
-    
+
     Input arguments:
         vec -- a vector
-        
+
     Output arguments:
-        sumvec -- a float correspond to the desired sum
-        
+        sumvec, a float: the sum
+
     Remark:
         Direct implementation without using this function leads to numerical
         errors.
