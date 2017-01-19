@@ -1,0 +1,13 @@
+\begin{thebibliography}{1}
+
+\bibitem{ghahramani1997factorial}
+Zoubin Ghahramani and Michael~I Jordan.
+\newblock Factorial hidden markov models.
+\newblock {\em Machine learning}, 29(2-3):245--273, 1997.
+
+\bibitem{wu1983convergence}
+CF~Jeff Wu.
+\newblock On the convergence properties of the em algorithm.
+\newblock {\em The Annals of statistics}, pages 95--103, 1983.
+
+\end{thebibliography}

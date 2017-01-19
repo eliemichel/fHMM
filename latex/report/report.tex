@@ -33,6 +33,7 @@
 \newcommand{\Mstep}{\textsc{M-step}}
 \newcommand{\EM}{\textsc{EM}}
 \newcommand{\meanfield}{\textsc{mean-field}}
+\newcommand{\structmeanfield}{\textsc{structured mean-field}}
 
 \title{MVA, Projet PGM : Rapport\\
   Factorial HMM}
@@ -47,10 +48,13 @@
 \subsection{Comparaison avec HMM}
 Le but de ce rapport est de présenter le modèle \emph{Factorial HMM}, extension 
 du modèle \hmm, \emph{Hidden Markov Model}. Ce dernier suppose qu'une variable 
-aléatoire cachée, dont l'évolution temporelle est régie par une chaine de 
-Markov homogène, est à l'origine d'une observation. Le modèle que l'on se 
-propose d'étudier ici met en parallèle $M$ chaînes de Markov homogènes et 
-indépendantes qui sont à l'origine d'une observation. Ce modèle décrit bien
+aléatoire cachée, dont l'évolution temporelle est régie par une chaine de variables
+cachées, est à l'origine d'une observation. Le modèle que l'on se 
+propose d'étudier ici met en parallèle $M$ chaînes \footnote{Malgré la 
+similitude avec $M$ chaînes de Markov indépendantes et homogènes, il est incorrect
+d'utiliser cette terminologie ici puisque les chaînes sont couplées via les variables
+d'observation} de variables cachées
+ qui sont à l'origine d'une observation. Ce modèle décrit bien
 des situations d'évolution temporelle dans lesquelles plusieurs facteurs 
 indépendants entrent en jeu.
 L'espace d'état de chaque variable cachée est  supposé être le même et est fini
@@ -124,10 +128,10 @@ dans toute la suite de notre rapport.
   $D \in \mathbb{N}^*$ & dimension des variables observées \\ \hline
   $(\Pi_{k}^m)_{(m,k) \in \llbracket 1,M \rrbracket \times \llbracket 1,K 
   \rrbracket} \in [0,1]^{MK}$ & mesures de probabilité initiales pour chaque 
-  chaîne de Markov \\ \hline
+  chaîne \\ \hline
   $(A_{k_1,k_2}^m)_{(m,k_1,k_2) \in \llbracket 1,M \rrbracket \times \llbracket 
   1,K \rrbracket^2} \in [0,1]^{MK^2}$ & matrices de transition pour chaque chaîne 
-  de Markov \\ \hline
+   \\ \hline
   $C \in \mathcal{S}_D^{++}(\mathbb{R})$ & matrice de covariance \\ \hline
   $(W_{x,k}^m)_{(m,x,k) \in \llbracket 1,M \rrbracket \times \llbracket 1,D 
   \rrbracket \times \llbracket 1,K \rrbracket} \in \mathbb{R}^{MDK}$ & matrices 
@@ -147,7 +151,8 @@ vecteur $(Y_t)_{t \in \llbracket 0,T \rrbracket}$, $Y_{(-t)}$ le vecteur
 $(Y_{t})_{t \in \llbracket 0,T \rrbracket\backslash \lbrace t \rbrace}$, 
 $Y_{(t_1,t_2)}$ le vecteur $(Y_t)_{t \in \llbracket t_1,t_2 \rrbracket}$. Ces 
 notations s'étendent aux variables cachées. Enfin on notera $\theta=(\Pi, 
-A,C,W)$ le vecteur de paramètres.
+A,C,W)$ le vecteur de paramètres. Si il n'y pas d'ambiguïté la dépendance 
+par rapport à $\theta$ est sous-entendue
 \section{Le problème d'inférence et l'algorithme EM}
 \subsection{Algorithme EM}
 Soit $p$ une mesure de probabilité qui se factorise selon \fhmm. On a alors :
@@ -255,7 +260,7 @@ Cette étude est classique (maximisation des paramètres pour la
 log-vraisemblance d'une gaussienne) et les calculs ont déjà été effectués à 
 plusieurs reprises.
 On rappelle simplement que la maximisation se fait d'abord sur $W$, l'argument
-maximum ne dépendant pas de $C$ on peut facilement réinjecter dans
+maximum ne dépendant pas de $C$ on peut facilement réinjecter
 $\widehat{W}$ dans $\mathcal{L}'(\widehat{W},C)$ et optimiser selon
 $C$\footnote{En réalité on optimise selon $C^{-1}$ qui donne une 
 expression plus facile à manipuler}.
@@ -268,7 +273,7 @@ On obtient les expressions suivantes :
 \end{equation}
 Où $M^+$ est la pseudo-inverse de Moore-Penrose. On a ici utilisé le fait que 
 la pseudo-inverse de Moore-Penrose donne une solution au problème des moindres 
-carrés CITER. La maximisation selon $C^{-1}$ donne :
+carrés \cite{ben2003generalized}. La maximisation selon $C^{-1}$ donne :
 \begin{equation}
 \widehat{C}=\frac{1}{T+1}\underset{t=0}{\overset{T}{\sum}}Y_t 
 {}^tY_t-\frac{1}{T+1}\underset{t=0}{\overset{T}{\sum}}\underset{m=1}{\overset{M}
@@ -406,12 +411,12 @@ obtenir autant d'échantillons de Gibbs.
 On détaille simplement le calcul de la probabilité pour $t \in \llbracket 1,T-1 
 \rrbracket$ (les autres calculs sont similaires) :
 \begin{equation}
-\begin{align}
+\begin{aligned}
 p(S_t^m \vert Y_t, S_{(t)}^{(m)} \backslash S_t^m)&=\frac{1}{Z_1}p(S_t^{m}, 
 S_{(-t)}^{m}, S_{t}^{(-m)},Y_t) \\
 &=\frac{1}{Z_2}p(Y_t \vert S_t^{m},S_t^{(-m)}) p(S_t^m \vert S_{t-1}^m) 
 p(S_{t+1}^m \vert S_t^m)
-\end{align}
+\end{aligned}
 \end{equation}
 La constante $Z_2$ est facilement calculable en sommant en notant que 
 $\underset{S_t^m}{\sum}p(S_t^m \vert Y_t, S_{(t)}^{(m)} \backslash S_t^m)=1$.
@@ -436,7 +441,7 @@ factorisée).
 On a :
 
 \begin{equation}
-  \begin{align}
+  \begin{aligned}
   \log(p(Y_{(t)}))-\mathcal{L}(Y_{(t)}, \theta, q) &=
     \mathbb{E}_q \log \left(\frac{p(S_{(t)}^{(m)}, Y_{(t)})}
 				  {q(S_{(t)}^{(m)})} \right) \\
@@ -445,7 +450,7 @@ On a :
   &= \mathbb{E}_q \log \left( \frac{q(S_{(t)}^{(m)})}
 				  {p(S_{(t)}^{(m)} \vert Y_{(t)})} \right) \\
   &= \text{KL}(q \| \hat{q})
-  \end{align}
+  \end{aligned}
 \end{equation}
 Où KL est la divergence de Kullback-Leiber. Cette quantité est positive et vaut 
 zéro seulement si $q=\hat{q}$.
@@ -464,12 +469,13 @@ Avec :
 \ \underset{k=1}{\overset{K}{\sum}} \theta_{t,k}^m = 1
 \end{equation}
 On va alors opérer une descente de gradient coordonnée par coordonnée.
-%TODO
-JUSTIFICATION. La divergence de Kullback-Leiber est de la forme suivante (on note 
+ La justification de ce choix est expliquée dans \cite{wainwright2008graphical} et détaillée dans \ref{rqvar}. 
+ La divergence de Kullback-Leiber est de la forme suivante (on note 
 $\theta_t^m = (\theta_{t,k}^m)_{k \in \llbracket 1, K \rrbracket}$ et la 
 fonction logarithme sur un vecteur correspond au logarithme sur chacune des 
 coordonnées) :
 \begin{multline}
+\label{KLmeanfield}
 \text{KL}(q \| \hat{q}) =  
 \underset{t=0}{\overset{T}{\sum}}\underset{m=1}{\overset{M}{\sum}} 
 {}^t\theta_t^m \log(\theta_t^m) + \\ \frac{1}{2} 
@@ -546,7 +552,7 @@ Le modèle devient alors :
   A_{k_2,k_1}^m\right)^{S_{t-1,k_2}^m} \right)^{S_{t,k_1}^m}
 \end{equation}
 On remarque que cette probabilité peut très facilement s'écrire sous la forme 
-d'une famille exponentielle de probabilités. DONNER CARAC.
+d'une famille exponentielle de probabilités.
 On peut reprendre les calculs effectués précédemment et on obtient :
 \begin{equation}
 \begin{aligned}
@@ -615,7 +621,30 @@ t-1}^m(S_{t-1}^m)=\underset{S_t^m}{\sum} h_{t,S_t^m} A_{S_{t-1}^m,S_{t}^m}^m
 \end{aligned}
 \right.
 \end{equation}
+\subsection{Quelques remarques sur les modèles variationnels}
+\label{rqvar}
+ Les deux derniers modèles introduisent une étape itérative pour trouver une mesure de probabilité
+ proche la postérieure sous contrainte. L'algorithme utilisé est une mise à jour coordonnée par 
+ coordonnée. Or, l'algorithme de descente coordonnée par coordonnée n'est assuré de fonctionner que dans  le cas d'une
+ fonction objectif convexe. Ainsi, on peut se retrouver bloquer dans un maximum local. Ce problème de non-
+ convexité s'observe dans le cadre de \fhmm pour les deux approches variationnelles. On détaille le cas 
+ \meanfield où il est plus facile à identifier. 
+ 
+ On remarque tout d'abord qu'en considérant \ref{KLmeanfield} on constate que la fonction obtenue en
+ fixant $(\theta_{(-t)})^{(-m)}$ et en ne considérant que les variations en $\theta_t^m$ est concave.
+ Ainsi, pour maximiser, il est bien justifié d'annuler la dérivée. Cependant \ref{KLmeanfield} n'est
+ pas concave en $(\theta_{(t)})^{(m)}$. En effet, il comporte le terme suivant :
+ \begin{equation}
+ \underset{t=0}{\overset{T}{\sum}}\underset{m=1}{\overset{M}{\sum}}\underset{n \neq m}{\sum}
+ \text{Tr}\left( {}^tW^m C^{-1}W^n\theta_t^n {}^t\theta_t^m\right)
+ \end{equation}
+ Celui-ci n'est pas concave et donc on n'a pas assurance de la convergence de l'algorithme 
+ coordonnée par coordonnée vers le maximum global. L'interprétation est plus compliquée pour le
+ modèle \structmeanfield. Néanmoins, malgré ces problèmes de convergence vers un point stationnaire, 
+ les modèles variationnels sont très utilisés car ils fournissent de bonnes bornes inférieures.
 \section{Résultats}
+\label{results}
+
 On présente ici les résultats de l'implémentation de ces différents modèles.  
 On va d'abord présenter l'évolution de la log-vraisemblance au cours de 
 l'algorithme \EM.
@@ -636,11 +665,13 @@ cadre \hmm{} connu avec un espace d'états de taille $K^M$.
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{../resources/pictures/M3_K2_hmm.png}
+\caption{Évolution de la log-vraisemblance pour inférence exacte \hmm}
 \end{figure}
 On teste ensuite l'inférence exacte pour le modèle \fhmm.
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{../resources/pictures/M3_K2_fhmm_exact.png}
+\caption{Évolution de la log-vraisemblance pour inférence exacte \fhmm}
 \end{figure}
 Dans les deux cas on observe une stricte croissance de la log-vraisemblance
 
@@ -665,6 +696,7 @@ d'échantillons créé et $N_s$ le nombre d'échantillons conservé.
 \begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{../resources/pictures/M3_K2_gibbsnoburning.png}
+  \caption{Évolution de la log-vraisemblance pour l'échantillonneur de Gibbs impatient}
 \end{figure}
 
   Bien qu'on observe une tendance croissante et une stabilisation de la 
@@ -677,6 +709,7 @@ Ici, on a créé $N_r = 30$ échantillons et on en conserve $N_s = 10$.
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{../resources/pictures/M3_K2_gibbs.png}
+\caption{Évolution de la log-vraisemblance pour l'échantillonneur de Gibbs}
 \end{figure}
 On constate que les propriétés de croissance sont meilleures (même si des 
 oscillations restent présentes). Néanmoins, on paye cher l'augmentation du 
@@ -686,7 +719,7 @@ il est évident que si $K$ et $M$ sont plus grands cet échantillonnage restera
 plus rapide que l'inférence exacte). Or le but de l'échantillonnage de Gibbs 
 est justement d'éviter d'avoir à passer par une inférence exacte assez lente 
 pour des valeurs élevées de $M$ et $K$.
-\subsubsection{Approche variationnelle complètement factorisée}
+\subsubsection{Approches variationnelles}
 Comme décrit précédemment une autre approche du problème consiste à ne pas 
 essayer d'échantillonner selon la mesure $p(S_{(t)}^{(m)} \vert Y_{(t)})$ mais 
 selon une mesure de probabilité qui s'en approche soumise à des contraintes. La 
@@ -698,11 +731,12 @@ minimisation de cette divergence se fait de manière itérative en opérant une
 descente selon chaque coordonnée. Les auteurs de \cite{ghahramani1997factorial} 
 remarque que la convergence est très rapide ($N_{it}< 10$ avec $N_{it}$ le 
 nombre d'itérations. On observe l'évolution suivante pour la log-vraisemblance 
-avec $n_{it} = 5$.
+avec $N_{it} = 5$.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{../resources/pictures/M3_K2_meanfield.png}
+\caption{Évolution de la log-vraisemblance pour \meanfield}
 \end{figure}
 
 Le fait que cette log-vraisemblance ne soit pas strictement croissante est 
@@ -710,7 +744,68 @@ justifiée par le fait que la log-vraisemblance est ici une log-vraisemblance
 approchée puisque la mesure de probabilité considérée n'est plus 
 $p(S_{(t)}^{(m)} \vert Y_{(t)})$.
 
-\label{results}
+On présente également les résultats obtenus pour le modèle \structmeanfield. On rappelle
+que l'hypothèse faite sur les états cachés n'est plus une indépendance mais une structure
+ de $M$ chaînes de Markov superposées. 
+ 
+ \begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../resources/pictures/M3_K2_structmeanfield.png}
+\caption{Évolution de la log-vraisemblance pour \structmeanfield}
+\end{figure}
+\subsubsection{Comportement aux temps longs}
+ Dans les études précédentes ainsi que dans \cite{ghahramani1997factorial} les études sont menées sur de
+  courtes chaines ($T=20$). On illustre ici pour le cas $T = 100$ les résultats obtenus via l'inférence 
+  exacte.
+  
+ \begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../resources/pictures/M2_K2_T100_exactinference.png}
+\caption{$M=2$, $K=2$, $T=100$, inférence exacte}
+\end{figure}
+
+Il est à préciser que puisque le nombre de paramètres des modèles variationnels augmente linéairement
+avec $T$, il est naturel de devoir augmenter les paramètres itératifs pour s'approcher de la convergence.
+Les résultats empiriques obtenus suggèrent que, même pour $T=100$, on observe une stabilisation de la 
+log-vraisemblance pour $N_{it}<100$.
+\subsection{Un critère : complexité et temps d'exécution}
+On a vu dans la partie précédente plusieurs possibilités pour calculer \Estep. Il s'agit maintenant
+ d'obtenir des critères pour décider quelle méthode employer. On peut d'abord s'intéresser à la 
+ complexité algorithmique de ces méthodes. Ces complexités sont récapitulées dans le tableau suivant.
+\newline
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Méthode & Complexité algorithmique \\
+\hline \hline
+\hmm - inférence exacte &  $\mathcal{O}(TK^{2M})$ \\ \hline
+\fhmm - inférence exacte &  $\mathcal{O}(TK^{M+1})$ \\ \hline
+échantillonnage de Gibbs &  $\mathcal{O}(TKM N_r )$ \\ \hline
+\meanfield & $\mathcal{O}(TK^2MN_{it})$ \\ \hline
+\structmeanfield & $\mathcal{O}(TK^2MN_{it})$ \\ \hline
+\end{tabular}
+\end{center}
+Dans le tableau suivant on présente les résultats obtenus lors de nos tests sur des modèles génératifs
+ avec paramètres d'entrée aléatoires et $M=3$ et $K=2$. On a posé $N_{it}=5$, $N_r=30$ et $N_s=10$. On a toujours $T=10$.
+ 
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Méthode & Temps itération (s) \\
+\hline \hline
+\hmm - inférence exacte & 0.453  \\ \hline
+\fhmm - inférence exacte & 0.429 \\ \hline
+échantillonnage de Gibbs &  1.100 \\ \hline
+\meanfield & 0.053 \\ \hline
+\structmeanfield & 0.319 \\ \hline
+\end{tabular}
+\end{center}
+Ces résultats correspondent à ceux obtenus dans \cite{ghahramani1997factorial}, sauf pour l'inférence
+ exacte où \fhmm est plus rapide que \hmm. Néanmoins vu les données de complexité énoncées plus haut il
+  semble normal que \fhmm soit plus rapide que \hmm. Il convient aussi de remarquer que les méthodes
+   variationnelles possèdent l'avantage de fonctionner même si l'espace d'état est grand. Cela devient
+    rapidement faux pour les méthodes d'inférence exacte et pour l'échantillonnage de Gibbs.
+ \subsection{Overfitting}
   \bibliographystyle{plain}
   \bibliography{../resources/bibliography/bibfile}
 \end{document}
