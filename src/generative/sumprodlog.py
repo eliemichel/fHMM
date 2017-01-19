@@ -13,7 +13,7 @@ def sumprodlog(vec):
     Compute the logarithm of a sum of the exponential of a vector
 
     Input arguments:
-        vec -- a vector
+        vec, a vector
 
     Output arguments:
         sumvec, a float: the sum
@@ -25,7 +25,7 @@ def sumprodlog(vec):
     if vec.size == 0:
         sumvec = -1e308
     else:
-        M=np.max(vec)
-        sumvec=M+np.log(sum(np.exp(vec-M)))
-            
+        M = np.max(vec)
+        sumvec = M+np.log(sum(np.exp(vec-M)))
+
     return sumvec
